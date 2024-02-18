@@ -1,4 +1,4 @@
-create table payment_system
+﻿create table payment_system
 (
   payment_id      number(30) not null,
   from_client_id  number(30) not null,
@@ -25,8 +25,6 @@ select * from payment_system partition (p1);
 select * from payment_system partition (p2);
 
 ---------------------------------------------------------------------------------------------------------------------------
-
-grant read, write on directory data4load_dir to bikmetov;
 
 create table payment_external
 (
@@ -59,6 +57,4 @@ partition by range (payment_date)
 );
 
 
-
-
-
+select p.*, ora_partition_validation(rowid) from payment_external p;
