@@ -28,26 +28,38 @@ select * from payment_plan t
  where t.payment_id = 1;
 
 -- Решение
-create index payment_plan_id_glob_idx on payment_plan(payment_id);
+1) Добавить глобальный индекс create index payment_plan_id_glob_idx on payment_plan(payment_id);
+или create unique index payment_plan_id_glob_idx on payment_plan(payment_id);
 
 ----------------------------------------Запрос 2.---------------------------------------------
 select * from payment_plan t
  where t.payment_date = date '2021-06-01'+3;
 
 -- Решение
--- Всё Ок!
+1) Добавить локальный индекс create index payment_plan_status_local_idx on payment_plan(status_id) local;
+
+select * from payment_plan t
+ where t.payment_date = date '2021-06-01'+3 --and t.status_id = 'PAYED';
+
 
 ----------------------------------------Запрос 3.---------------------------------------------
 select * from payment_plan t
  where t.payment_date >= date '2021-06-01';
 
 -- Решение
-Добавить 'and t.payment_date <= sysdate', чтоб ограничить итератор сверху
+1) Добавить 'and t.payment_date <= sysdate', чтоб ограничить итератор сверху
 
+select * from payment_plan t
+ where t.payment_date >= date '2021-06-01' and t.payment_date <= sysdate;
 
 ----------------------------------------Запрос 4.---------------------------------------------
 select * from payment_plan t
  where trunc(t.payment_date) = date '2021-06-01';
 
 -- Решение
-Убрать функцию trunc с ключа секционирования
+1) Убрать функцию trunc с ключа секционирования, добавить ограничение "сверху", добавить локальный индекс
+2) Добавить локальный индекс create index payment_plan_status_local_idx on payment_plan(status_id) local;
+
+
+select * from payment_plan t
+ where t.payment_date >= date'2021-06-01' and t.payment_date < date'2021-06-01'+1 --and t.status_id = 'PAYED';
