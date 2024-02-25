@@ -1,4 +1,7 @@
-﻿-- Таблица для логирования
+﻿drop table log_message
+
+
+-- Таблица для логирования
 create table log_message
 (
   id             number(30) not null,
@@ -13,17 +16,21 @@ create table log_message
   oracle_user    varchar2(200 char) not null,
   call_stack     varchar2(4000 char) not null
 )
-partition by range (dtime)
-interval (numtodsinterval(1, 'DAY'))
+partition by range (dtime) interval (numtodsinterval(1, 'DAY'))
+subpartition by list (message_type) 
+subpartition template  (
+  subpartition pINFO values ('I'),
+  subpartition pERROR values ('E'),
+  subpartition pWARNING values ('W')
+  )
 (
   partition part_min values less than (to_date('01.01.2024 00:00:00', 'dd.mm.yyyy HH24:MI:SS'))
 );
 
 alter table log_message add constraint log_message_message_type_chk check (message_type in ('I', 'E', 'W'));
 
-create index log_message_message_source_idx on log_message(dtime desc, message_source) local;
-create index log_message_message_type_idx on log_message(dtime desc, message_type) local;
-create index log_message_message_idx on log_message(dtime desc, substr(message, 1, 100)) local;
+create index log_message_message_source_idx on log_message(dtime desc, message_type, message_source) local;
+create index log_message_message_idx on log_message(dtime desc, message_type, substr(message, 1, 100)) local;
 
 comment on table log_message is 'Лог событий в БД';
 comment on column log_message.id is 'UID';
@@ -60,3 +67,5 @@ begin
 end;
 
 select * from user_tab_partitions u where u.table_name = 'LOG_MESSAGE';
+
+select * from user_tab_subpartitions u where u.table_name = 'LOG_MESSAGE';
