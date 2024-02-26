@@ -91,7 +91,17 @@
     loop
       if (to_date(substr(p.part_high_value, 11, 10), 'YYYY-MM-DD') <= trunc(sysdate) - p_records_ttl_days) then
         if (substr(p.subpart_high_value, 2, 1) = p_message_type) then
-          v_sql := 'alter table log_message truncate subpartition ' || p.subpartition_name;
+          --Если ли субпартиция одна, то удаляем партицию, иначе удаляем только субпартицию 
+          select count(1)
+            into v_cnt
+            from user_tab_subpartitions sbs
+           where sbs.table_name = 'LOG_MESSAGE'
+             and sbs.partition_name = p.partition_name;
+          if v_cnt > 1 then
+            v_sql := 'alter table log_message drop subpartition ' || p.subpartition_name;
+          else
+            v_sql := 'alter table log_message drop partition ' || p.partition_name;
+          end if;
           execute immediate v_sql;
         end if;
       end if;
